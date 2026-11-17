@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "id": "job_harbor_data_associate",
+  "version": 1,
+  "employer": "Harbor Lantern Labs (fictional)",
+  "title": "Data Operations Associate",
+  "source": "Synthetic posting written for Career Agent",
+  "captured_at": "2026-01-15T12:00:00Z",
+  "description": "Use SQL to query operational data. Maintain data pipelines. Build reporting dashboards with Looker or Metabase. Familiarity with Dagster or Prefect is helpful. Analyze trends for planning.",
+  "requirements": [
+    {"id": "sql", "capability": "SQL", "level": "required", "source_phrase": "Use SQL to query operational data."},
+    {"id": "pipelines", "capability": "Data pipelines", "level": "responsibility", "source_phrase": "Maintain data pipelines."},
+    {"id": "dashboards", "capability": "Reporting", "level": "responsibility", "source_phrase": "Build reporting dashboards with Looker or Metabase.", "named_tools": ["Looker", "Metabase"]},
+    {"id": "orchestration", "capability": "Orchestration", "level": "preferred", "source_phrase": "Familiarity with Dagster or Prefect is helpful.", "named_tools": ["Dagster", "Prefect"]},
+    {"id": "analytics", "capability": "Trend analysis", "level": "responsibility", "source_phrase": "Analyze trends for planning."}
+  ]
+}

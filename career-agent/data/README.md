@@ -1,8 +1,8 @@
 # Data and private workspaces
 
-`templates/` contains illustrative blank starting points, not validated schemas.
-`examples/` is reserved for synthetic, non-identifying fixtures. Step 0.3 will
-define the authoritative contracts and representative synthetic data.
+`templates/` contains blank starting points. `examples/` contains synthetic
+job and evidence records for offline matching. Use them as a guide when
+creating your own JSON inputs inside your ignored workspace.
 
 Choose an explicit personal workspace, for example:
 
@@ -16,5 +16,6 @@ The command creates `imports`, `resumes`, `projects`, `jobs`, and
 or generated documents. `/data/users/` is ignored in this repository. An
 external workspace can provide stronger separation, but check the Git ignore
 rules of any repository that contains it. Git ignore does not remove already
-tracked files or protect backups. Store workspace state there as well. No
-profile selection, parsing, source hashing, or validation is implemented yet.
+tracked files or protect backups. Store workspace state there as well. The
+matcher validates normalized JSON. Prepare those files and their source
+references manually.

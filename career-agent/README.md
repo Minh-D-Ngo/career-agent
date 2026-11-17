@@ -1,8 +1,8 @@
 # Career Agent
 
-A local-first career assistant, currently at **Step 0.2: foundation**. The CLI
-can report status and create a private workspace. Resume generation, data
-contracts, LangGraph, persistence, and model calls are not implemented.
+A local-first career assistant, currently at **Step 0.3: offline evidence matching**.
+The CLI can initialize a private workspace and rank documented experience
+against a manually normalized job snapshot.
 
 ## Setup
 
@@ -21,7 +21,7 @@ career-agent status
 career-agent init --workspace data/users/local
 ```
 
-`status` prints `Career Agent foundation is ready. No resume workflow is implemented yet.`
+`status` shows which features are available.
 Initialization creates empty subdirectories without replacing existing files.
 Select a different path for each person, or place the workspace outside the
 repository. See `data/README.md` for the privacy boundary.
@@ -31,9 +31,25 @@ They are not required for any current command. Set them in your shell when
 needed; `.env.example` documents their names but is not automatically loaded.
 No current command makes an API call.
 
+## Try the matching baseline
+
+Run this from the project folder in PowerShell or a Unix shell:
+
+```sh
+career-agent match --job data/examples/harbor-demo-job.json --evidence data/examples/harbor-demo-evidence.json
+```
+
+The fictional Reading Room Inventory project ranks first. Its spreadsheet
+dashboard partially covers the reporting requirement, with Looker and
+Metabase both missing. The JSON includes matching evidence IDs and the job
+description hash. Labels are normalized by case and whitespace. See
+[the matching decisions](docs/decisions/0002-offline-matching.md) for the scoring
+rule and the limits of citation validation.
+
 ## Tests
 
-The standard-library test runner needs no network or API key:
+After installing the package and its Pydantic dependency, the standard-library
+test runner works offline without an API key:
 
 ```sh
 PYTHONPATH=src python -m unittest discover -s tests -v

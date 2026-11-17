@@ -1,6 +1,11 @@
 {
-  "job_id": "",
+  "schema_version": "1.0",
+  "id": "",
+  "version": 1,
   "employer": "",
   "title": "",
-  "description": ""
+  "source": "",
+  "captured_at": "",
+  "description": "",
+  "requirements": []
 }

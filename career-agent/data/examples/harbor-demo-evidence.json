@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "records": [
+    {
+      "id": "proj_trail_counts",
+      "kind": "project",
+      "title": "Trail Counts",
+      "facts": [
+        {
+          "id": "fact_trail_trends",
+          "assertion": "Compared monthly trail counter readings to identify seasonal trends.",
+          "capabilities": [
+            "Trend analysis"
+          ],
+          "technologies": [],
+          "source": {
+            "reference": "harbor-demo-source.md",
+            "section": "Trail Counts",
+            "sha256": "180360a2cfe4591c4096be1fde244a8d6f60471d9af2741452d515d81643878f"
+          },
+          "verification": "user_supplied"
+        }
+      ]
+    },
+    {
+      "id": "proj_audio_catalog",
+      "kind": "project",
+      "title": "Audio Catalog",
+      "facts": [
+        {
+          "id": "fact_audio_entries",
+          "assertion": "Transcribed handwritten audio catalog entries.",
+          "capabilities": [
+            "Transcription"
+          ],
+          "technologies": [],
+          "source": {
+            "reference": "harbor-demo-source.md",
+            "section": "Audio Catalog",
+            "sha256": "180360a2cfe4591c4096be1fde244a8d6f60471d9af2741452d515d81643878f"
+          },
+          "verification": "user_supplied"
+        }
+      ]
+    },
+    {
+      "id": "proj_reading_inventory",
+      "kind": "project",
+      "title": "Reading Room Inventory",
+      "facts": [
+        {
+          "id": "fact_inventory_pipeline",
+          "assertion": "Built a Python pipeline to load inventory data into SQLite and queried the database with SQL.",
+          "capabilities": [
+            "Data pipelines",
+            "SQL"
+          ],
+          "technologies": [
+            "Python",
+            "SQLite",
+            "SQL"
+          ],
+          "source": {
+            "reference": "harbor-demo-source.md",
+            "section": "Reading Room Inventory",
+            "sha256": "180360a2cfe4591c4096be1fde244a8d6f60471d9af2741452d515d81643878f"
+          },
+          "verification": "user_supplied"
+        },
+        {
+          "id": "fact_inventory_dashboard",
+          "assertion": "Published an inventory dashboard using a spreadsheet.",
+          "capabilities": [
+            "Reporting"
+          ],
+          "technologies": [
+            "Spreadsheet"
+          ],
+          "source": {
+            "reference": "harbor-demo-source.md",
+            "section": "Reading Room Inventory",
+            "sha256": "180360a2cfe4591c4096be1fde244a8d6f60471d9af2741452d515d81643878f"
+          },
+          "verification": "user_supplied"
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ name = "career-agent"
 version = "0.1.0"
 description = "A local-first career assistant, built incrementally"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["pydantic>=2,<3"]
 
 [project.optional-dependencies]
 test = ["pytest>=7"]

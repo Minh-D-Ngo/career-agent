@@ -6,7 +6,9 @@ contracts, LangGraph, persistence, and model calls are not implemented.
 
 ## Setup
 
-Python 3.10 or newer is required. From this directory:
+Python 3.10 or newer is required. In VS Code, open the project folder that
+contains `pyproject.toml`. In a fresh clone of this repository, that is the
+inner `career-agent/` folder. Run these commands from that folder:
 
 ```sh
 python -m venv .venv

@@ -1,0 +1,5 @@
+Fictional job posting
+Employer: Harbor Lantern Labs
+Role: Data Operations Associate
+
+Use SQL to query operational data. Maintain data pipelines. Build reporting dashboards with Looker or Metabase. Familiarity with Dagster or Prefect is helpful. Analyze trends for planning.

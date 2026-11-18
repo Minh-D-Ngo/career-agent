@@ -47,6 +47,7 @@ class DraftArtifacts:
 class DraftInput(TypedDict):
     job: JobSnapshot
     library: EvidenceLibrary
+    selected_fact_ids: tuple[str, ...] | None
 
 
 class DraftState(DraftInput, total=False):
@@ -59,19 +60,31 @@ def _match_evidence(state: DraftState) -> dict:
     return {"report": match(state["job"], state["library"])}
 
 
-def _select_claims(state: DraftState) -> dict:
-    report = state["report"]
+def candidate_facts(report: MatchReport, library: EvidenceLibrary) -> tuple[EvidenceFact, ...]:
     relevant_ids = {
         fact_id for item in report.requirements for fact_id in item.capability_evidence_ids
     }
-    records = {record.id: record for record in state["library"].records}
-    claims = tuple(
-        DraftClaim(id=f"claim_{fact.id}", text=fact.assertion, evidence_ids=(fact.id,))
+    records = {record.id: record for record in library.records}
+    return tuple(
+        fact
         for ranked in report.ranked_records[:MAX_RECORDS]
         for fact in records[ranked.record_id].facts
         if fact.id in relevant_ids
     )
-    return {"claims": claims}
+
+
+def _select_claims(state: DraftState) -> dict:
+    facts = candidate_facts(state["report"], state["library"])
+    selection = state["selected_fact_ids"]
+    if selection is not None:
+        by_id = {fact.id: fact for fact in facts}
+        if not selection or len(set(selection)) != len(selection) or set(selection) - by_id.keys():
+            raise DraftValidationError("Model selection must use unique fact IDs from the ranked shortlist.")
+        facts = tuple(by_id[fact_id] for fact_id in selection)
+    return {"claims": tuple(
+        DraftClaim(id=f"claim_{fact.id}", text=fact.assertion, evidence_ids=(fact.id,))
+        for fact in facts
+    )}
 
 
 def validate_verbatim_claim(
@@ -150,6 +163,8 @@ def _validate_and_render(state: DraftState) -> dict:
         "selected_record_ids": list(claims_by_record),
         "claims": evidence_rows,
     }
+    if state["selected_fact_ids"] is not None:
+        evidence["selected_fact_ids"] = state["selected_fact_ids"]
     gaps = {
         "schema_version": "1.0",
         **job_reference,
@@ -181,7 +196,11 @@ def _build_graph():
 _GRAPH = _build_graph()
 
 
-def build_draft(job: JobSnapshot, library: EvidenceLibrary) -> DraftArtifacts:
+def build_draft(
+    job: JobSnapshot, library: EvidenceLibrary, selected_fact_ids: tuple[str, ...] | None = None,
+) -> DraftArtifacts:
     # Draft inputs can contain private material even when tracing is enabled in the shell.
     with tracing_context(enabled=False):
-        return _GRAPH.invoke({"job": job, "library": library})["artifacts"]
+        return _GRAPH.invoke({
+            "job": job, "library": library, "selected_fact_ids": selected_fact_ids,
+        })["artifacts"]

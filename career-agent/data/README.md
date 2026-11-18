@@ -17,8 +17,8 @@ or generated documents. `/data/users/` is ignored in this repository. An
 external workspace can provide stronger separation, but check the Git ignore
 rules of any repository that contains it. Git ignore does not remove already
 tracked files or protect backups. Store workspace state there as well. The
-matcher validates normalized JSON. Prepare those files and their source
-references manually.
+matcher validates normalized JSON. Prepare it manually or use the opt-in
+OpenAI import commands. Review imported proposals before drafting.
 
 After approval, `career_agent.sqlite3` in the chosen workspace holds the
 exact approved draft and report bytes, the corresponding job snapshot, and

@@ -12,7 +12,7 @@ class FoundationTests(unittest.TestCase):
     def test_status_offline_without_configuration(self):
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(main(["status"]), 0)
-        self.assertIn("No resume workflow", out.getvalue())
+        self.assertIn("offline resume drafts", out.getvalue())
         self.assertIsNone(Settings.from_environment({}).openai_api_key)
 
     def test_settings_hide_secret(self):

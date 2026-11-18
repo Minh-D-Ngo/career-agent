@@ -1,8 +1,8 @@
 # Career Agent
 
-A local-first career assistant, currently at **Step 0.3: offline evidence matching**.
-The CLI can initialize a private workspace and rank documented experience
-against a manually normalized job snapshot.
+A local-first career assistant, currently at **Step 1.1: offline resume drafts**.
+The CLI can initialize a private workspace, rank documented evidence against
+a normalized job snapshot, and create a draft with evidence and gap reports.
 
 ## Setup
 
@@ -46,9 +46,31 @@ description hash. Labels are normalized by case and whitespace. See
 [the matching decisions](docs/decisions/0002-offline-matching.md) for the scoring
 rule and the limits of citation validation.
 
+## Try an offline resume draft
+
+Run this from the folder containing `pyproject.toml`, using a fresh output
+directory for each run:
+
+```powershell
+career-agent draft --job data/examples/harbor-demo-job.json --evidence data/examples/harbor-demo-evidence.json --output-dir data/users/local/resumes/harbor-demo
+```
+
+Open the three files in VS Code:
+
+- `draft.md` contains the draft bullets and their claim IDs.
+- `evidence.json` maps each claim to the original assertion, file section,
+  source hash, and verification status.
+- `gaps.json` shows coverage across the supplied evidence library, including
+  broader capabilities and missing named tools.
+
+The draft reuses evidence text from up to three ranked records and stays in
+`DRAFT` for review. A report entry marked `supported` means the text matches its
+cited assertion. Check the separate verification status before relying on a
+claim. [See how the graph works](docs/decisions/0003-offline-drafting.md).
+
 ## Tests
 
-After installing the package and its Pydantic dependency, the standard-library
+After installing the package and its dependencies, the standard-library
 test runner works offline without an API key:
 
 ```sh
@@ -65,7 +87,9 @@ Installing packages may need network access; executing the tests does not.
 - Step 0.1: acceptance specification supplied by the owner.
 - Step 0.2: package, CLI, environment settings, workspace convention, offline tests.
 - Step 0.3: typed data contracts and an inspectable deterministic baseline.
-- Step 1.1 onward: offline LangGraph slice, then review/persistence and optional model/export.
+- Step 1.1: offline LangGraph draft with evidence and gap reports.
+- Step 1.2: explicit approval and version persistence.
+- Step 1.3: optional model use and document export.
 
 Never commit private resumes, job snapshots, application history, or secrets.
 `.gitignore` covers the default private directory and `.env`; it does not

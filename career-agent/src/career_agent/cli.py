@@ -1,9 +1,11 @@
-"""CLI for local workspace setup, matching, and drafting."""
+"""CLI for drafting, approval, and local application history."""
 
 import argparse
 from dataclasses import asdict
+from datetime import date
 import json
 from pathlib import Path
+import sqlite3
 from typing import Sequence, TypeVar
 
 from pydantic import BaseModel, ValidationError
@@ -12,6 +14,7 @@ from . import __version__
 from .contracts import EvidenceLibrary, JobSnapshot
 from .drafting import DraftValidationError, build_draft
 from .matching import match
+from .storage import WorkspaceError, approve_draft, history, record_application
 
 WORKSPACE_DIRECTORIES = ("imports", "resumes", "projects", "jobs", "applications")
 
@@ -43,13 +46,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     init.add_argument("--workspace", required=True, type=Path, help="Path to the personal workspace")
     match_command = commands.add_parser("match", help="Rank evidence against a normalized job")
     draft_command = commands.add_parser("draft", help="Create an offline resume draft and reports")
-    for command in (match_command, draft_command):
+    approve_command = commands.add_parser("approve", help="Approve an exact draft after reviewing its files")
+    apply_command = commands.add_parser("record-application", help="Record a submission you already made")
+    history_command = commands.add_parser("history", help="List approved versions and application records")
+    for command in (approve_command, apply_command, history_command):
+        command.add_argument("--workspace", required=True, type=Path, help="Personal workspace path")
+    approve_command.add_argument("--draft-dir", required=True, type=Path, help="Directory of reviewed draft files")
+    apply_command.add_argument("--resume", required=True, help="Approved resume ID")
+    apply_command.add_argument("--submitted-on", type=date.fromisoformat, help="Submission date (YYYY-MM-DD)")
+    apply_command.add_argument("--method", help="How you submitted the application")
+    apply_command.add_argument("--notes", help="Optional application notes")
+
+    for command in (match_command, draft_command, approve_command):
         command.add_argument("--job", required=True, type=Path, help="Job snapshot JSON")
         command.add_argument("--evidence", required=True, type=Path, help="Evidence library JSON")
     draft_command.add_argument("--output-dir", required=True, type=Path, help="New directory for draft files")
     args = parser.parse_args(argv)
 
-    if args.command in {"match", "draft"}:
+    if args.command in {"match", "draft", "approve"}:
         job = _read_contract(parser, args.job, "job", JobSnapshot)
         library = _read_contract(parser, args.evidence, "evidence", EvidenceLibrary)
         if args.command == "match":
@@ -60,6 +74,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             draft = build_draft(job, library)
         except DraftValidationError as exc:
             parser.exit(2, f"Draft validation failed: {exc}\n")
+        if args.command == "approve":
+            try:
+                resume_id = approve_draft(args.workspace, args.draft_dir, job, draft)
+            except WorkspaceError as exc:
+                parser.exit(2, f"Approval refused: {exc}\n")
+            except (OSError, sqlite3.Error) as exc:
+                parser.exit(1, f"Could not save approval: {exc}\n")
+            print(f"Approved resume: {resume_id}")
+            return 0
+
         try:
             args.output_dir.mkdir(parents=True, exist_ok=False)
         except FileExistsError:
@@ -68,10 +92,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             parser.exit(1, f"Could not create output directory: {exc.strerror or exc}\n")
 
         try:
-            for name, content in (
-                ("draft.md", draft.markdown), ("evidence.json", draft.evidence_json),
-                ("gaps.json", draft.gaps_json),
-            ):
+            for name, content in draft.files():
                 with (args.output_dir / name).open("x", encoding="utf-8", newline="\n") as stream:
                     stream.write(content)
         except OSError as exc:
@@ -81,8 +102,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("Review status: DRAFT")
         return 0
 
+    if args.command in {"record-application", "history"}:
+        try:
+            if args.command == "history":
+                print(json.dumps(history(args.workspace), indent=2))
+                return 0
+            record_application(
+                args.workspace, args.resume, submitted_on=args.submitted_on,
+                method=args.method, notes=args.notes,
+            )
+        except WorkspaceError as exc:
+            parser.exit(2, f"Application record refused: {exc}\n")
+        except (OSError, sqlite3.Error) as exc:
+            parser.exit(1, f"Could not access workspace history: {exc}\n")
+        print(f"User-reported submission recorded for {args.resume}")
+        return 0
+
     if args.command == "status":
-        print("Career Agent can match evidence and create offline resume drafts for review.")
+        print("Career Agent supports offline resume drafts, approvals, and local application history.")
         return 0
     if args.command == "init":
         try:

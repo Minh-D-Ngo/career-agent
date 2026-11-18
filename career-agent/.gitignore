@@ -9,3 +9,5 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+career_agent.sqlite3
+career_agent.sqlite3-*

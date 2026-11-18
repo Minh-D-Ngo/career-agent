@@ -1,8 +1,8 @@
 # Career Agent
 
-A local-first career assistant, currently at **Step 1.1: offline resume drafts**.
-The CLI can initialize a private workspace, rank documented evidence against
-a normalized job snapshot, and create a draft with evidence and gap reports.
+A local-first career assistant, currently at **Step 1.2: local approval and history**.
+The CLI can match evidence to a job, write a draft with reports, save the exact
+approved version, and record a submission you made.
 
 ## Setup
 
@@ -68,6 +68,43 @@ The draft reuses evidence text from up to three ranked records and stays in
 cited assertion. Check the separate verification status before relying on a
 claim. [See how the graph works](docs/decisions/0003-offline-drafting.md).
 
+## Approve a draft and record a submission
+
+For a practice run in PowerShell, use a separate ignored demo workspace. Run
+these commands from the folder containing `pyproject.toml`:
+
+```powershell
+$demo = 'data/users/demo'
+$job = 'data/examples/harbor-demo-job.json'
+$evidence = 'data/examples/harbor-demo-evidence.json'
+$draft = "$demo/resumes/harbor-demo"
+python -m career_agent.cli draft --job $job --evidence $evidence --output-dir $draft
+```
+
+Open `draft.md`, `evidence.json`, and `gaps.json` in VS Code. Once you've
+reviewed them, approve that exact version:
+
+```powershell
+python -m career_agent.cli approve --workspace $demo --draft-dir $draft --job $job --evidence $evidence
+python -m career_agent.cli history --workspace $demo
+```
+
+History shows an approved version and application status `NOT_RECORDED`.
+To simulate recording a submission in the fictional demo, paste the ID printed
+by `approve` into the following command:
+
+```powershell
+$resumeId = 'paste-approved-resume-id'
+python -m career_agent.cli record-application --workspace $demo --resume $resumeId --submitted-on 2026-01-16 --method 'Company website'
+python -m career_agent.cli history --workspace $demo
+```
+
+For a real job, run `record-application` after submitting the application
+yourself. History will show `USER_REPORTED_SUBMITTED`. The workspace database
+stores the approved bytes, their source job snapshot, and application history.
+To revise a draft, generate and review a fresh bundle before approving.
+[See the storage decisions](docs/decisions/0004-local-approval.md).
+
 ## Tests
 
 After installing the package and its dependencies, the standard-library
@@ -88,7 +125,7 @@ Installing packages may need network access; executing the tests does not.
 - Step 0.2: package, CLI, environment settings, workspace convention, offline tests.
 - Step 0.3: typed data contracts and an inspectable deterministic baseline.
 - Step 1.1: offline LangGraph draft with evidence and gap reports.
-- Step 1.2: explicit approval and version persistence.
+- Step 1.2: explicit approval, immutable versions, and local submission records.
 - Step 1.3: optional model use and document export.
 
 Never commit private resumes, job snapshots, application history, or secrets.

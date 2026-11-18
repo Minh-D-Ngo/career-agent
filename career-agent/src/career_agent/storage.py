@@ -159,3 +159,18 @@ def history(workspace: Path) -> list[dict]:
                ORDER BY r.approved_at, r.resume_id"""
         )
         return [dict(row) for row in rows]
+
+
+def approved_markdown(workspace: Path, resume_id: str) -> str:
+    database = workspace / DATABASE_NAME
+    if database.is_file():
+        with closing(_connect(database, readonly=True)) as connection:
+            row = connection.execute(
+                "SELECT markdown, content_sha256 FROM approved_resumes WHERE resume_id = ?", (resume_id,),
+            ).fetchone()
+        if row is not None:
+            markdown = row["markdown"]
+            if hashlib.sha256(markdown).hexdigest() != row["content_sha256"]:
+                raise WorkspaceError("The stored Markdown hash does not match the approved version.")
+            return markdown.decode("utf-8")
+    raise WorkspaceError("No approved resume has that ID.")

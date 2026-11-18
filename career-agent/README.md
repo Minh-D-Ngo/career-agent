@@ -1,8 +1,8 @@
 # Career Agent
 
-A local-first career assistant, currently at **Step 1.2: local approval and history**.
-The CLI can match evidence to a job, write a draft with reports, save the exact
-approved version, and record a submission you made.
+A local-first career assistant, currently at **Step 1.3: optional document import,
+model-assisted selection, and DOCX export**. You can still match, draft, and
+approve using existing JSON entirely offline.
 
 ## Setup
 
@@ -26,10 +26,9 @@ Initialization creates empty subdirectories without replacing existing files.
 Select a different path for each person, or place the workspace outside the
 repository. See `data/README.md` for the privacy boundary.
 
-Optional environment variables are `OPENAI_API_KEY` and `OPENAI_MODEL`.
-They are not required for any current command. Set them in your shell when
-needed; `.env.example` documents their names but is not automatically loaded.
-No current command makes an API call.
+Set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` in your shell for the
+explicit `--use-openai` commands. `.env.example` documents their names.
+The app reads the shell environment.
 
 ## Try the matching baseline
 
@@ -105,6 +104,73 @@ stores the approved bytes, their source job snapshot, and application history.
 To revise a draft, generate and review a fresh bundle before approving.
 [See the storage decisions](docs/decisions/0004-local-approval.md).
 
+## Use your own files in VS Code
+
+Keep your original resume, project descriptions, and individual job postings
+in `data/users/local/imports/`. The import commands read UTF-8 TXT, Markdown,
+DOCX, or text-based PDF files. Give `import-job` one posting per file. For
+scanned PDFs, make a text copy or run OCR first.
+
+From the folder containing `pyproject.toml`, install the optional extras:
+
+```powershell
+python -m pip install -e '.[model,documents]'
+$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'OpenAI API key' -AsSecureString)).Password
+```
+
+First, you can try the optional import with `data/examples/harbor-demo-source.md`
+and `data/examples/harbor-demo-posting.txt` in place of your originals. For real
+documents, review what you are sending. `import-evidence` sends extracted
+resume and project text to OpenAI, including contact details if they appear
+in the text. Use a redacted copy if needed. `import-job` sends the posting
+text, any employer/title overrides, and capability labels from the cited
+library. The SDK requests structured output with `store=false`.
+
+Set the following file names to match your files, then run each command after
+the previous one succeeds:
+
+```powershell
+$localWorkspace = 'data/users/local'
+$evidenceLibrary = "$localWorkspace/projects/evidence-library.json"
+$jobSnapshot = "$localWorkspace/jobs/first-job-v1.json"
+
+python -m career_agent.cli import-evidence --use-openai --source "$localWorkspace/imports/resume.docx" --source "$localWorkspace/imports/project-one.txt" --source "$localWorkspace/imports/project-two.txt" --output $evidenceLibrary
+python -m career_agent.cli import-job --use-openai --source "$localWorkspace/imports/job-posting.txt" --job-id job_first_posting --evidence $evidenceLibrary --output $jobSnapshot
+```
+
+Review both JSON proposals in VS Code. Check the assertions, capability
+labels, and the job's requirement levels before drafting. Evidence remains
+marked `user_supplied`. The source hashes describe the original files. The
+same evidence library can be used for every job. To add or refresh documents,
+run `import-evidence` with `--existing $evidenceLibrary`, pass the sources
+to update, and choose a new output filename. Unchanged sources and records
+from other files are kept. Imported source identity uses the file's absolute
+path, so moving a source makes it a new source.
+
+```powershell
+$draftFolder = "$localWorkspace/resumes/first-job-draft-01"
+python -m career_agent.cli draft --job $jobSnapshot --evidence $evidenceLibrary --output-dir $draftFolder
+```
+
+That draft runs offline. To try model-assisted selection, add `--use-openai`
+and choose a new output folder. This sends the role title, normalized
+requirements, and shortlisted assertion text and IDs, then selects from
+those IDs. The draft still uses the original evidence wording. Approval
+uses the saved selection and works offline. Use the prior section's
+`approve` command with your real job, evidence, workspace, and draft paths.
+
+After approving, export a local Word copy using the ID printed by `approve`:
+
+```powershell
+$resumeId = 'paste-approved-resume-id'
+python -m career_agent.cli export-docx --workspace $localWorkspace --resume $resumeId --output "$localWorkspace/resumes/first-job.docx"
+```
+
+DOCX is a simple formatted copy of the approved draft. Review the layout in
+Word. Keep the exact file you submit in your workspace, since the history
+currently links to the approved source bundle. See the [Step 1.3 design
+notes](docs/decisions/0005-assisted-import-and-export.md).
+
 ## Tests
 
 After installing the package and its dependencies, the standard-library
@@ -126,7 +192,7 @@ Installing packages may need network access; executing the tests does not.
 - Step 0.3: typed data contracts and an inspectable deterministic baseline.
 - Step 1.1: offline LangGraph draft with evidence and gap reports.
 - Step 1.2: explicit approval, immutable versions, and local submission records.
-- Step 1.3: optional model use and document export.
+- Step 1.3: opt-in OpenAI imports and evidence selection, plus local DOCX export.
 
 Never commit private resumes, job snapshots, application history, or secrets.
 `.gitignore` covers the default private directory and `.env`; it does not

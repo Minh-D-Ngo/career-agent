@@ -19,3 +19,9 @@ rules of any repository that contains it. Git ignore does not remove already
 tracked files or protect backups. Store workspace state there as well. The
 matcher validates normalized JSON. Prepare those files and their source
 references manually.
+
+After approval, `career_agent.sqlite3` in the chosen workspace holds the
+exact approved draft and report bytes, the corresponding job snapshot, and
+user-recorded submissions. Keep that database and its sidecar files local
+along with the draft files. When backing up, close any process using the
+database first.

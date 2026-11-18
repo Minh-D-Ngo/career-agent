@@ -31,9 +31,17 @@ class DraftValidationError(ValueError):
 @dataclass(frozen=True)
 class DraftArtifacts:
     draft_id: str
+    claim_count: int
     markdown: str
     evidence_json: str
     gaps_json: str
+
+    def files(self) -> tuple[tuple[str, str], ...]:
+        return (
+            ("draft.md", self.markdown),
+            ("evidence.json", self.evidence_json),
+            ("gaps.json", self.gaps_json),
+        )
 
 
 class DraftInput(TypedDict):
@@ -151,6 +159,7 @@ def _validate_and_render(state: DraftState) -> dict:
     draft_id = "draft_" + hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()[:16]
     return {"artifacts": DraftArtifacts(
         draft_id=draft_id,
+        claim_count=len(evidence_rows),
         markdown=markdown,
         evidence_json=_json_text({"draft_id": draft_id, **evidence}),
         gaps_json=_json_text({"draft_id": draft_id, **gaps}),
